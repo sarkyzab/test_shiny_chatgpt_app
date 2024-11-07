@@ -1,91 +1,60 @@
-# Load necessary libraries
-
+# Load the required libraries
 library(shiny)
-library(dplyr)
-library(ggplot2)
+library(ggplot2)  # For the mpg dataset
 
- 
-
-# Define UI for the app
-
+# Define UI
 ui <- fluidPage(
-
- 
-
-  # App title
-
-  titlePanel("Iris Dataset Scatter Plot"),
-
- 
-
-  # Sidebar layout with inputs and plot output
-
-  sidebarLayout(
-
-    sidebarPanel(
-
-      # Dropdown menus for x and y axes
-
-      selectInput("xvar", "Select X-axis variable:",
-
-                  choices = colnames(iris)[1:4], # Only numeric columns for axes
-
-                  selected = "Sepal.Length"),
-
-     
-
-      selectInput("yvar", "Select Y-axis variable:",
-
-                  choices = colnames(iris)[1:4], # Only numeric columns for axes
-
-                  selected = "Sepal.Width")
-
-    ),
-
-   
-
-    # Main panel to display the scatter plot
-
-    mainPanel(
-
-      plotOutput("scatterPlot")
-
-    )
-
+  
+  # Application title
+  titlePanel("Shiny App with MPG Dataset"),
+  
+  # Navbar with different tabs
+  navbarPage("Navbar",
+             
+             # Tab 1 (Main content)
+             tabPanel("Car Data", 
+                      sidebarLayout(
+                        sidebarPanel(
+                          # Dropdown to select car manufacturer
+                          selectInput("manufacturer", "Select a manufacturer:",
+                                      choices = unique(mpg$manufacturer))
+                        ),
+                        mainPanel(
+                          # Show a plot of the selected manufacturer's data
+                          plotOutput("mpgPlot")
+                        )
+                      )
+             ),
+             
+             # Tab 2 (About)
+             tabPanel("About",
+                      h3("This is a Shiny app to explore the MPG dataset."),
+                      p("You can select a manufacturer from the dropdown on the left to see a plot of fuel efficiency (mpg) by car class.")
+             )
   )
-
 )
 
- 
-
-# Define server logic for plotting
-
+# Define server logic
 server <- function(input, output) {
-
- 
-
-  # Reactive expression to generate the plot based on input selections
-
-  output$scatterPlot <- renderPlot({
-
-    ggplot(iris, aes_string(x = input$xvar, y = input$yvar)) +
-
-      geom_point(aes(color = Species), size = 3) +
-
-      labs(title = paste("Scatter plot of", input$xvar, "vs", input$yvar),
-
-           x = input$xvar,
-
-           y = input$yvar) +
-
-      theme_minimal()
-
+  
+  # Filter the dataset based on the selected manufacturer
+  filtered_data <- reactive({
+    mpg[mpg$manufacturer == input$manufacturer, ]
   })
-
+  
+  # Render a plot based on the filtered data
+  output$mpgPlot <- renderPlot({
+    data <- filtered_data()
+    
+    # Create a boxplot of mpg by car class
+    ggplot(data, aes(x = class, y = hwy)) +
+      geom_boxplot() +
+      labs(title = paste("Fuel Efficiency (mpg) for", input$manufacturer),
+           x = "Car Class",
+           y = "Highway MPG") +
+      theme_minimal()
+  })
 }
 
- 
-
-# Run the app
-
+# Run the application
 shinyApp(ui = ui, server = server)
