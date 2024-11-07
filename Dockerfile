@@ -1,0 +1,5 @@
+FROM rocker/shiny:latest
+RUN R -e "install.packages(c('shiny', 'ggplot2', 'dplyr'))"
+WORKDIR /test-shiny_chatgpt_app
+COPY app.R app.R
+CMD Rscript app.R
